@@ -1,0 +1,65 @@
+---
+title: "Script Instructions"
+author: "Aaron"
+date: "7/4/2018"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Prerequisits
+
+To use the accompanion script, you have to insall the packages `here` and `tidyverse`.
+
+# Where to place files
+
+The script need two files, first a file with "raw data", meaning the items coded as they are writen down by the students. Second, a file that specifies which answers should give which points. Boith files have to be in the `data` directory, named `data.csv` and `template.csv`
+
+## Raw Data
+
+This should be a simple CSV file, where the first row indicate itemnames, and each subsequent row the answeres to the items of student. The first column should be `id`. This is column is used to generate the table with the grades. **Important**: This should not be "recoded", please type in exactly what the students have answered. How the items should be recoded is specified in `correction template`.
+
+## Correction Template
+
+This should be a simple CSV file, where the first row contains the pre defined column names "item", "type", "recode", "points", "precheck" and "postcheck".
+
+### item
+
+The item column should contain itemnames corresponding to the `data.csv`, if itemnames are present that are not in `data.csv` a error is givin.
+
+### type
+
+You can specify itemtypes here. At the moment these types are implemented:
+
+* bin: binary items, works the same as single, but with more errorchecking
+* single: single choice items, `recode` specifys the "true" value, if this value is found for this item in one row, the value is counted as specified in `points`, if not it is coded as 0.
+* meta: metadata about a person, e.g. matrikelnummmer, semester, major etc. is completly ignored in the script
+
+To be implmented:
+
+* multi, multiple choice items
+
+You can specify types on your own, and adapt the script to recognize these types.
+
+### recode
+
+here you specify the "true" value, the script compares the answeres of the students to this value, if it is equal, the item is answered correctly
+
+### point
+
+If an item is answered correctly, you can specify how many points it gives.
+
+### precheck
+
+You can specify here all values, that are accepted as an input for that item in `data.csv`. Meaing this checks the items before they are processed. For example an item has four possible answeres: A, B, C, D and you mistype "A"" as "S", then the script will give an error with the itemname, the unexpected value, and the expected values.
+
+If you don't want to check the input, leave it blank. If you want to specify values you need the seperate them by comma (",") and enclose them in `""`. E.g. "A,B,C,D"
+
+### postcheck
+
+Here you can specify the expec
