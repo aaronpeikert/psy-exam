@@ -66,6 +66,21 @@ code <- function(...){
 
 points <- pmap(codebook, code)
 names(points) <- pull(codebook, "item")
-points <- as.tibble(points)
+points <- as.data.frame(points, stringsAsFactors = FALSE)
+
 #----overwrite-numbers----
 points[!is.na(numbers)] <- numbers[!is.na(numbers)]
+
+#----handle-item-status---
+if(!all(na.omit(pull(codebook, "status")) %in% c("included", "excluded", "optional")))warning("Some items have a unnknown status.")
+codebook <- mutate(codebook, status = ifelse(is.na(status), "included", status))
+excluded <- pull(codebook, "item")[map_lgl(pull(codebook, "status") == "excluded", isTRUE)]
+points <- select(points, -one_of(excluded))
+codebook <- filter(codebook, !(item %in% excluded))
+
+#----calc-maxpoints----
+maxpoints <- pull(
+  filter(codebook, (status == "included"), !(type == "meta")),
+  "points")
+# meaning; only include items that are included but not meta items
+maxpoints <- sum(as.numeric(maxpoints))
