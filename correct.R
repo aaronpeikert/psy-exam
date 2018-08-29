@@ -3,11 +3,11 @@ library(tidyverse)
 
 #----define-general-functions----
 postcheck <- function(item, out, postcheck){
-  postcheck <- flatten_chr(str_split(postcheck, ","))
+  postcheck <- parse_character(flatten_chr(str_split(postcheck, ",")))
   if(!all(is.na(postcheck))&(!all(out %in% postcheck)))warning(paste0("Postcheck failed for item: ", item))
 }
 precheck <- function(item, precheck){
-  precheck <- flatten_chr(str_split(precheck, ","))
+  precheck <- parse_character(flatten_chr(str_split(precheck, ",")))
   if(!all(is.na(precheck))&(!all(pull(data, item) %in% precheck)))warning(paste0("Precheck failed for item: ", item))
 }
 #----read-data----
