@@ -19,22 +19,41 @@ codebook <- readxl::read_xlsx("codebook.xlsx", col_types = "text")
 
 #----check-files----
 if(names(data)[1] != "id")stop("The first column in data.xlsx should be 'id'")
-if(!all(names(codebook) %in% c("item", "answer", "type", "points", "precheck", "postcheck")))stop("You have not supplied the right columns in codebook.xlsx")
+if(!all(names(codebook) %in% c("item", "answer", "type", "points", "precheck", "postcheck", "status")))stop("You have not supplied the right columns in codebook.xlsx")
 if(!all(names(data) %in% pull(codebook, "item")))stop("Itemnames in data.xlsx don't match itemnames in codebook.xlsx, therefore there are some items in the data, which are not in the codebook.")
 if(!all(pull(codebook, "item") %in% names(data)))stop("Itemnames in codebook.xlsx don't match itemnames in data.xlsx")
 
 #----define-code-functions----
-code_meta <- function(item, answer, points, precheck, postcheck){
+code_meta <- function(item, answer, points, precheck, postcheck, status){
   out <- pull(data, item)
   return(out)
 }
 
-code_single <- function(item, answer, points, precheck, postcheck){
+code_single <- function(item, answer, points, precheck, postcheck, status){
   precheck(item, precheck)
   out <- ifelse(pull(data, item) == answer, points, 0)
+  out[is.na(out)] <- 0
+  if(anyNA(out))browser()
   postcheck(item, out, postcheck)
   return(out)
 }
+
+#----extract-numbers----
+
+not_numericish <- function(x){
+  numericish_ <- function(x){
+    if(length(x) != 1)stop("This function checks only single elemts")
+    if(is.na(x))return(TRUE)
+    if(is.na(suppressWarnings(as.numeric(x))))return(TRUE)
+    else return(FALSE)
+  }
+  out <- map_lgl(x, numericish_)
+  return(out)
+}
+
+numbers <- data
+numbers[as.matrix(mutate_all(data, not_numericish))] <- NA
+numbers <- as.data.frame(numbers, stringsAsFactors = FALSE)
 
 #----apply-code-functions----
 code <- function(...){
@@ -48,3 +67,5 @@ code <- function(...){
 points <- pmap(codebook, code)
 names(points) <- pull(codebook, "item")
 points <- as.tibble(points)
+#----overwrite-numbers----
+points[!is.na(numbers)] <- numbers[!is.na(numbers)]
