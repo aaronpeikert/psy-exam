@@ -4,11 +4,17 @@ library(tidyverse)
 #----define-general-functions----
 postcheck <- function(item, out, postcheck){
   postcheck <- parse_character(flatten_chr(str_split(postcheck, ",")))
-  if(!all(is.na(postcheck))&(!all(out %in% postcheck)))warning(paste0("Postcheck failed for item: ", item))
+  if(!all(is.na(postcheck))&(!all(out %in% postcheck))){
+    warning(paste0("Postcheck failed for item: ", item))
+    #browser()
+  }
 }
 precheck <- function(item, precheck){
   precheck <- parse_character(flatten_chr(str_split(precheck, ",")))
-  if(!all(is.na(precheck))&(!all(pull(data, item) %in% precheck)))warning(paste0("Precheck failed for item: ", item))
+  if(!all(is.na(precheck))&(!all(pull(data, item) %in% precheck))){
+    warning(paste0("Precheck failed for item: ", item))
+    #browser()
+  }
 }
 #----read-data----
 if(!file.exists("codebook.xlsx"))stop(paste0("There is no codebook.xlsx in ", getwd()))
@@ -84,3 +90,43 @@ maxpoints <- pull(
   "points")
 # meaning; only include items that are included but not meta items
 maxpoints <- sum(as.numeric(maxpoints))
+
+#----calc-percentage----
+raw_points <- mutate_all(select(points, one_of(pull(
+  filter(codebook, !(type == "meta")), "item"))), parse_double)
+
+final <- mutate(select(points, id), percent = pmap_dbl(raw_points, lift(sum))/maxpoints)
+
+#----grade----
+calc_cutpoints <- function(percent, average_function = median){
+  if(!all(between(percent, 0, 1)))stop("Some values lies beyond the plausible range!")
+  average <- do.call(average_function, list(percent))
+  grades <- c(flatten_dbl(map(1:3, ~. + c(0, .3, .7))), 4)
+  border <- c(.5, average-.1)
+  border <- border[which.min(border)]
+  toshare <- (1-border)
+  breaks <- c(0, border, .125*toshare + border,seq(.25, .75, by = .25/3)*toshare + border, .95, 1)
+  grades <- c(grades, 5) %>% rev()
+  out <- list(grades = grades, breaks = breaks)
+  return(out)
+}
+
+print_cutpoints <- function(cutpoints){
+  breaks <- cutpoints$breaks[-length(cutpoints$breaks)]
+  grades <- cutpoints$grades
+  out <- data.frame(breaks = breaks, grades = grades)
+  return(out)
+}
+
+grade <- function(percent, cutpoints = calc_cutpoints(percent)){
+  breaks <- cutpoints$breaks
+  grades <- cutpoints$grades
+  out <- cut(percent, breaks = breaks, labels = grades, right = FALSE)
+  out <- as.numeric(as.character(out))
+  return(out)
+}
+
+final <- mutate(final, grade = grade(percent))
+
+#----write-out----
+write_csv(final, "grades.csv")
