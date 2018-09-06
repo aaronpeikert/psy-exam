@@ -46,10 +46,10 @@ code_single <- function(item, answer, points, precheck, postcheck, status){
 
 #----extract-numbers----
 
-not_numericish <- function(x){
+numericish <- function(x){
   numericish_ <- function(x){
-    if(length(x) != 1)stop("This function checks only single elemts")
-    if(is.na(x))return(TRUE)
+    if(length(x) != 1)stop("This function checks only single elements")
+    if(is.na(x))return(FALSE)
     if(is.na(suppressWarnings(as.numeric(x))))return(TRUE)
     else return(FALSE)
   }
@@ -58,7 +58,7 @@ not_numericish <- function(x){
 }
 
 numbers <- data
-numbers[as.matrix(mutate_all(data, not_numericish))] <- NA
+numbers[as.matrix(mutate_all(data, negate(numericish)))] <- NA
 numbers <- as.data.frame(numbers, stringsAsFactors = FALSE)
 
 #----apply-code-functions----
