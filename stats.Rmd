@@ -1,0 +1,95 @@
+---
+title: "Item Stats"
+author: "Aaron"
+date: "9/6/2018"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(psych)
+library(pander)
+knitr::read_chunk(here::here("correct.R"))
+```
+
+```{r define-general-functions}
+```
+
+```{r read-data}
+```
+
+```{r check-files}
+```
+
+```{r define-code-functions}
+```
+
+```{r extract-numbers}
+```
+
+```{r apply-code-functions}
+```
+
+```{r overwrite-numbers}
+```
+
+```{r handle-item-status}
+```
+
+```{r calc-maxpoints}
+```
+
+```{r calc-percentage}
+```
+
+```{r grade}
+```
+
+## Trennschärfe
+
+```{r}
+raw_points %>%
+  mutate(sum = rowSums(.), id = !!points$id) %>% 
+  gather("item", "points", -sum, -id) %>%
+  group_by(item) %>% 
+  summarise(mean = mean(points),
+            trennschaerfe = suppressWarnings(cor(points, sum))) %>% 
+  pander(round = 2)
+```
+
+## Notenschlüssel
+
+```{r}
+calc_cutpoints(final$percent) %>%
+  print_cutpoints() %>%
+  pander()
+```
+
+## Prozent
+
+```{r}
+ggplot(final, aes(percent)) +
+  geom_density(fill = "black", alpha = .1) +
+  theme_minimal()
+```
+
+## Notenverteilung
+
+```{r}
+final %>% 
+  ggplot(aes(grade)) +
+  geom_bar(alpha = .1,
+                 fill = "black",
+                 color = "black") +
+    theme_minimal() +
+  scale_x_continuous("grade",
+                     labels = as.character(final$grade),
+                     breaks = final$grade)
+```
+
+```{r}
+final %>% pull("grade") %>% table() %>% pander()
+```
+
