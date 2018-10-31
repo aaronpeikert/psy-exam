@@ -129,4 +129,4 @@ grade <- function(percent, cutpoints = calc_cutpoints(percent)){
 final <- mutate(final, grade = grade(percent))
 
 #----write-out----
-write_csv(final, "grades.csv")
+write_excel_csv(final, "grades.csv")
