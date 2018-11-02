@@ -1,0 +1,85 @@
+---
+title: "Klausurergbnisse `r params$id`"
+author: "Lehrstuhl Diagnostik"
+output:
+  pdf_document
+tables: TRUE
+params:
+  id: "526815"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(psych)
+library(pander)
+library(knitr)
+read_chunk(here::here("correct.R"))
+opts_chunk$set(echo = FALSE)
+```
+
+```{r define-general-functions}
+```
+
+```{r read-data}
+```
+
+```{r check-files}
+```
+
+```{r define-code-functions}
+```
+
+```{r extract-numbers}
+```
+
+```{r apply-code-functions}
+```
+
+```{r overwrite-numbers}
+```
+
+```{r handle-item-status}
+```
+
+```{r calc-maxpoints}
+```
+
+```{r calc-percentage}
+```
+
+```{r grade}
+```
+
+```{r, results='asis'}
+summary <- final %>% 
+  filter(id == params$id)
+
+cat(paste0("You have achieved **", summary$points, "** from **", maxpoints, "** points possible, yielding **", round(summary$percent*100, 2), "%** correct answers.  \nYour grade is therefore a **", summary$grade, "**.\n"))
+
+calc_cutpoints(final$percent) %>%
+  print_cutpoints() %>%
+  mutate(points = round(breaks*maxpoints, 2),
+         percent = breaks %>% round(2) %>% {.*100} %>% paste0("%")) %>% 
+  select(percent, points, grade = "grades") %>% 
+  full_join(final %>% group_by(grade) %>% count(), by = "grade" ) %>% 
+  t() %>% 
+  pander(missing = "0", split.tables = Inf)
+```
+
+```{r}
+items <- codebook %>% filter(type != "meta") %>% pull("item")
+
+codebook %>% filter(type != "meta") %>% 
+  select(item, answer, status, points) %>% 
+  full_join(data %>%
+              filter(id == params$id) %>%
+              select(one_of(items)) %>%
+              gather("item", "your\nanswer"), by = "item") %>% 
+  full_join(points %>%
+              filter(id == params$id) %>%
+              select(one_of(items)) %>%
+              gather("item", "your\npoints"), by = "item") %>% 
+  select(item, `true \n answer` = "answer", `your\nanswer`, `max\npoints` = "points", `your\npoints`) %>% 
+  pander(keep.line.breaks = TRUE)
+```
+
