@@ -77,6 +77,9 @@ points <- as.data.frame(points, stringsAsFactors = FALSE)
 #----overwrite-numbers----
 points[!is.na(numbers)] <- numbers[!is.na(numbers)]
 
+#----write points----
+write_csv(points, "points.csv")
+
 #----handle-item-status---
 if(!all(na.omit(pull(codebook, "status")) %in% c("included", "excluded", "optional")))warning("Some items have a unnknown status.")
 codebook <- mutate(codebook, status = ifelse(is.na(status), "included", status))
